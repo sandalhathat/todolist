@@ -2,6 +2,7 @@
 const express = require('express');
 const app = express();
 const argon2 = require('argon2');
+const nodemailer = require('nodemailer');
 const port = process.env.PORT || 3000;
 
 //middleware
@@ -104,6 +105,23 @@ app.post('/api/reset-password', async (req, res) => {
       res.status(500).json({ error: 'Something went wrong during password reset.' });
     }
   });
+
+//----------endpoint for nodemailer----------
+const nodemailer = require('nodemailer');
+//configuration for sending emails
+const transporter = nodemailer.createTransport({
+    service: 'your_email_service_provider',
+    auth: {
+        user: 'your_email_username',
+        pass: 'your_email_password',
+    },
+});
+transporter.sendMail({
+    from: 'your_email@example.com',
+    to: 'recipient@example.com',
+    subject: 'Test email',
+    text: 'This is a test email from your app.',
+});
 
 
 //start server
