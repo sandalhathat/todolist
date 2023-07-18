@@ -1,17 +1,24 @@
 // app.js 
-const AWS = require('aws-sdk');
+
+// const AWS = require('aws-sdk');
+// require('dotenv').config();//loads env vars from file
 const express = require('express');
 const app = express();
-const argon2 = require('argon2');
-const nodemailer = require('nodemailer');
 const port = process.env.PORT || 3000;
+const argon2 = require('argon2');
+const { createItem, readItem, updateItem, deleteItem } = require('./dynamoDBUtils');
+const nodemailer = require('nodemailer');
 
 
-AWS.config.update({
-    region: 'us-west-2',
-    accessKeyId: process.env.AWS.ACCESS_KEY_ID,
-    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
-});
+//initializing aws sdk
+// AWS.config.update({
+//     region: 'us-west-2',
+//     accessKeyId: process.env.AWS.ACCESS_KEY_ID,
+//     secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+// });
+
+//creating dynamodb client
+const dynamodb = new AWS.DynamoDB();
 
 
 //middleware
