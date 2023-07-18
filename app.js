@@ -7,7 +7,7 @@ const app = express();
 const port = process.env.PORT || 3000;
 const argon2 = require('argon2');
 const { createItem, readItem, updateItem, deleteItem } = require('./dynamoDBUtils');
-const nodemailer = require('nodemailer');
+// const nodemailer = require('nodemailer');
 
 
 //initializing aws sdk
@@ -18,7 +18,7 @@ const nodemailer = require('nodemailer');
 // });
 
 //creating dynamodb client
-const dynamodb = new AWS.DynamoDB();
+// const dynamodb = new AWS.DynamoDB();
 
 
 //middleware
