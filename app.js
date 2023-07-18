@@ -79,6 +79,41 @@ app.post('/api/reset-password', async (req, res) => {
     }
 });
 
+//----------endpoint for user login----------
+app.post('/api/login', async (req, res) => {
+    const { email, password } = req.body;
+
+    //validation: ensuring both email and pw are provided
+    if (!email || !password) {
+        return res.status(400).json({ error: 'Please provide both email and password.'});
+    }
+
+    //check if user exists... in real app, query the db...
+    const user = users.find((user) => user.email === email);
+
+    if (!user) {
+        return res.status(404).json({ error: 'Email not registered.'});
+    }
+
+    try {
+        //verify provided pw using argon2
+        const passwordValid = await argon2.verify(user.password, password);
+    
+        if (!passwordValid) {
+            return res.status(401).json({ error: 'Invalid password.' });
+        }
+
+        //pw is valid, user logs in
+        //maybe implement additional logic later dealing with login
+
+        res.json({ message: 'User logged in successfully!' });
+    } catch (error) {
+        console.error('Error during user login:', error);
+        res.status(500).json({ error: 'Something went wrong during login.' });
+    }
+});
+
+
 //----------endpoint for nodemailer----------
 const nodemailer = require('nodemailer');
 const transporter = nodemailer.createTransport({
