@@ -1,9 +1,18 @@
 // app.js 
+const AWS = require('aws-sdk');
 const express = require('express');
 const app = express();
 const argon2 = require('argon2');
 const nodemailer = require('nodemailer');
 const port = process.env.PORT || 3000;
+
+
+AWS.config.update({
+    region: 'us-west-2',
+    accessKeyId: process.env.AWS.ACCESS_KEY_ID,
+    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+});
+
 
 //middleware
 app.use(express.json()); //parse JSON requests
