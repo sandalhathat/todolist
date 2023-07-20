@@ -7,6 +7,16 @@ const port = process.env.PORT || 8080;
 const argon2 = require('argon2');
 const { createItem, readItem, updateItem, deleteItem } = require('./dynamoDBUtils');
 
+//importing these 
+const fs = require('fs');
+const pidFilePath = '/var/pids/web.pid';
+//creating pid file 
+fs.writeFileSync(pidFilePath, process.pid.toString(), 'utf-8');
+//when app shuts down, remove pid file
+process.on('exit', () => {
+    fs.unlinkSync(pidFilePath);
+});
+
 // Middleware
 app.use(express.json()); // Parse JSON requests
 
