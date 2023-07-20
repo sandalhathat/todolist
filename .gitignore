@@ -1,5 +1,4 @@
 
-
 requirements.txt
 notes.txt
 chatGPT_response.txt
@@ -8,9 +7,11 @@ node_modules
 
 .env
 
-
 aws_stuff.txt
 
 ToDoAppBackendUser_accessKeys.csv
 
 todolist.ppk
+
+logs.txt
+
