@@ -1,7 +1,7 @@
 //dynamoDBUtils.js
 
-
 const AWS = require('aws-sdk');
+const { v4: uuidv4 } = require('uuid');
 require('dotenv').config(); //load .env
 
 AWS.config.update({
@@ -53,10 +53,10 @@ function deleteItem(params) {
     });
 }
 
-
 module.exports = {
     createItem,
     readItem,
     updateItem,
     deleteItem,
+    generateVerificationToken: () => uuidv4(),
 };
