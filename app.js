@@ -24,6 +24,19 @@ app.use(express.json()); // Parse JSON requests
 
 //----------endpoint for user reg----------
 const users = [];
+
+// Hard-coded sample user for testing purposes
+const sampleUser = {
+    username: 'testface',
+    email: 'test@example.com',
+    password: 'testpassword',
+    isEmailVerified: false,
+};
+
+users.push(sampleUser);
+
+
+
 app.post('/api/register', async (req, res) => {
     const { username, email, password } = req.body;
 
@@ -137,7 +150,6 @@ app.post('/api/login', async (req, res) => {
 
         //pw is valid, user logs in
         //maybe implement additional logic later dealing with login
-
         res.json({ message: 'User logged in successfully!' });
     } catch (error) {
         console.error('Error during user login:', error);
@@ -149,21 +161,12 @@ app.post('/api/login', async (req, res) => {
 //----------endpoint for nodemailer----------
 const nodemailer = require('nodemailer');
 const transporter = nodemailer.createTransport({
-    // service: 'process.env.EMAIL_SERVICE_PROVIDER_USER',
     service: 'process.env.process.env.EMAIL_SERVICE_PROVIDER',
     auth: {
-        // user: 'your_email_username',
-        // pass: 'your_email_password',
         user: 'process.env.EMAIL_SERVICE_PROVIDER_USER',
         pass: 'process.env.EMAIL_SERVICE_PROVIDER_PASS',
     },
 });
-// transporter.sendMail({
-//     from: 'your_email@example.com',
-//     to: 'recipient@example.com',
-//     subject: 'Test email',
-//     text: 'This is a test email from your app.',
-// });
 
 app.post('/api/send-verification-email', async (req, res) => {
     const { email } = req.body;
@@ -179,17 +182,13 @@ app.post('/api/send-verification-email', async (req, res) => {
             return res.json({ message: 'Email already verified.' });
         }
 
-        // try {
         //generate verification token using uuid
         const verificationToken = uuidv4();
         //send verif using nodemailer and ses
         await transporter.sendMail({
-            // from: 'your_email@example.com',
-            // from: process.env.SENDER_EMAIL,
             from: email,
             to: email,
             subject: 'Email Verification',
-            // text: `Please click on the link to verify email: https://your-app-url/verify/${verificationToken}`,
             text: `Please click on the link to verify email: Todolist-env-1.eba-rk2kpbwc.us-east-2.elasticbeanstalk.com/api/verify/${verificationToken}`,
         });
         res.json({ message: 'Verification email sent successfully!' });
