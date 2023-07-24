@@ -16,8 +16,9 @@ process.on('exit', () => {
 
 app.use(express.json());
 
-const users = [];
+// const users = [];not needed anymore
 
+//endpoint for ...user reg..
 app.post('/api/register', async (req, res) => {
     const { username, email, password } = req.body;
 
@@ -31,8 +32,11 @@ app.post('/api/register', async (req, res) => {
 
     try {
         const hashedPassword = await argon2.hash(password);
+
+        //gen verif token 
         const verificationToken = generateVerificationToken();
 
+        //create object w user data to store in dynamodb
         const newUser = {
             username,
             email,
@@ -41,8 +45,8 @@ app.post('/api/register', async (req, res) => {
             verificationToken,
         };
 
-        users.push(newUser);
-
+        // users.push(newUser);...not sure why this would be  now missing... but ok
+        await createItem({ TableName: 'userinfo', Item: newUser });
         console.log(`Verification token for ${email}: ${verificationToken}`);
 
         res.json({ message: 'User successfully registered!' });
@@ -52,11 +56,14 @@ app.post('/api/register', async (req, res) => {
     }
 });
 
+//endpoint for... verification token...?
 app.get('/api/verify/:verificationToken', async (req, res) => {
     const verificationToken = req.params.verificationToken;
 
     try {
-        const user = users.find((user) => user.verificationToken === verificationToken);
+        // const user = users.find((user) => user.verificationToken === verificationToken);
+        //find usr with matching verif token in userinfo table
+        const user = await readItem({ TableName: 'userinfo', Key: { username: verificationToken } });
 
         if (!user) {
             return res.status(404).json({ error: 'Invalid verification token.' });
@@ -65,7 +72,9 @@ app.get('/api/verify/:verificationToken', async (req, res) => {
         user.isEmailVerified = true;
         user.verificationToken = null;
 
-        await dynamoDBUtils.updateItem({ Item: user });
+        // await dynamoDBUtils.updateItem({ Item: user });
+        //save updated usr in userinfo tbl
+        await updateItem({ TableName: 'userinfo', Item: user });
 
         res.json({ message: 'Email verified successfully!' });
     } catch (error) {
@@ -74,6 +83,7 @@ app.get('/api/verify/:verificationToken', async (req, res) => {
     }
 });
 
+//endpoint for reset pass
 app.post('/api/reset-password', async (req, res) => {
     const { email } = req.body;
 
@@ -97,6 +107,7 @@ app.post('/api/reset-password', async (req, res) => {
     }
 });
 
+//endpoint for user login
 app.post('/api/login', async (req, res) => {
     const { email, password } = req.body;
 
@@ -124,18 +135,6 @@ app.post('/api/login', async (req, res) => {
     }
 });
 
-// const nodemailer = require('nodemailer');
-// const transporter = nodemailer.createTransport({
-//     // Use the actual email service provider name, not process.env.process.env.EMAIL_SERVICE_PROVIDER
-//     service: 'your_email_service_provider_here',
-//     auth: {
-//         // Use the actual username from the email service provider, not process.env.EMAIL_SERVICE_PROVIDER_USER
-//         user: 'your_email_service_provider_username_here',
-//         // Use the actual password from the email service provider, not process.env.EMAIL_SERVICE_PROVIDER_PASS
-//         pass: 'your_email_service_provider_password_here',
-//     },
-// });
-
 //----------endpoint for nodemailer----------
 const nodemailer = require('nodemailer');
 const transporter = nodemailer.createTransport({
@@ -146,6 +145,7 @@ const transporter = nodemailer.createTransport({
     },
 });
 
+//endpoint for ...send verif email?
 app.post('/api/send-verification-email', async (req, res) => {
     const { email } = req.body;
 
