@@ -39,7 +39,12 @@ app.post('/api/register', async (req, res) => {
         };
 
         // Save the new user in the "userinfo" table
+        //before creating a new user in db
+        console.log('Creating new user:', newUser);
+        //creates new user
         await createItem({ TableName: 'userinfo', Item: newUser });
+        //after creating new user
+        console.log('User created successfully!');
         console.log(`Verification token for ${email}: ${verificationToken}`);
 
         // Send the verification email here (Step 3)
