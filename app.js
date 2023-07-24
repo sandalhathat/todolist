@@ -26,14 +26,14 @@ app.use(express.json()); // Parse JSON requests
 const users = [];
 
 // Hard-coded sample user for testing purposes
-const sampleUser = {
-    username: 'testface',
-    email: 'test@example.com',
-    password: 'testpassword',
-    isEmailVerified: false,
-};
+// const sampleUser = {
+//     username: 'testface',
+//     email: 'test@example.com',
+//     password: 'testpassword',
+//     isEmailVerified: false,
+// };
 
-users.push(sampleUser);
+// users.push(sampleUser);
 
 
 
