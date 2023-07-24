@@ -51,14 +51,22 @@ app.post('/api/register', async (req, res) => {
     try {
         const hashedPassword = await argon2.hash(password);
 
+        //for testing... generate verification token
+        const verificationToken = generateRandomToken();
+
+
         const newUser = {
             username,
             email,
             password: hashedPassword,
             isEmailVerified: false,//add flag to indicate email verif
+            verificationToken, //add the verif token to user data ...///testing?
         };
 
         users.push(newUser);
+
+        //testing, log the verification token
+        console.log(`Verification token for ${email}: ${verificationToken}`);
 
         // Implement later: send verification email to user
 
