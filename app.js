@@ -5,7 +5,6 @@ const app = express();
 const port = process.env.PORT || 80;
 const argon2 = require('argon2');
 const { createItem, readItem, updateItem, generateVerificationToken } = require('./dynamoDBUtils');
-
 const fs = require('fs');
 const pidFilePath = '/var/pids/web.pid';
 fs.writeFileSync(pidFilePath, process.pid.toString(), 'utf-8');
@@ -19,7 +18,10 @@ app.use(express.json());
 app.post('/api/register', async (req, res) => {
     const { username, email, password } = req.body;
 
+    console.log('Received registration request:',req.body);//log testing
+
     if (!username || !email || !password) {
+        console.log('Missing required fields:', { username, email, password });
         return res.status(400).json({ error: 'Please provide all required fields.' });
     }
 
