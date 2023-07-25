@@ -4,7 +4,9 @@ const express = require('express');
 const app = express();
 const port = process.env.PORT || 80;
 const argon2 = require('argon2');
-const { createItem, readItem, updateItem, generateVerificationToken } = require('./dynamoDBUtils');
+const { createItem, readItem, updateItem, generateVerificationToken } = require
+    ('./dynamoDBUtils');
+const { isValidEmail, sanitizeEmail, formatEmailKey } = require('./emailUtils');
 const fs = require('fs');
 const pidFilePath = '/var/pids/web.pid';
 fs.writeFileSync(pidFilePath, process.pid.toString(), 'utf-8');
@@ -14,11 +16,11 @@ process.on('exit', () => {
 
 app.use(express.json());
 
-//endpoint for user reg
+// Endpoint for user registration
 app.post('/api/register', async (req, res) => {
     const { username, email, password } = req.body;
 
-    console.log('Received registration request:',req.body);//log testing
+    console.log('Received registration request:', req.body);//log testing
 
     if (!username || !email || !password) {
         console.log('Missing required fields:', { username, email, password });
@@ -59,7 +61,7 @@ app.post('/api/register', async (req, res) => {
     }
 });
 
-//endpoint for email verification
+// Endpoint for email verification
 app.get('/api/verify/:verificationToken', async (req, res) => {
     const verificationToken = req.params.verificationToken;
 
@@ -84,7 +86,7 @@ app.get('/api/verify/:verificationToken', async (req, res) => {
     }
 });
 
-//endpoint for reset pass
+// Endpoint for password reset
 app.post('/api/reset-password', async (req, res) => {
     const { email } = req.body;
 
@@ -112,6 +114,68 @@ app.post('/api/reset-password', async (req, res) => {
         res.status(500).json({ error: 'Something went wrong during password reset.' });
     }
 });
+
+function sendVerificationEmail(email, verificationToken) {
+    //add code here to send verif email to user email
+    //can use libs like nodemailer to send...
+    //create nodemailer transporter using email srvc prov
+    const transporter = nodemailer.createTransport({
+        host: 'your_smtp_host',
+        port: 587,
+        secure: false,
+        auth: {
+            user: 'your_email@example.com',
+            pass: 'your_email_password',
+        },
+    });
+
+    // Email content
+    const mailOptions = {
+        from: 'your_email@example.com', // Replace with your email address
+        to: email,
+        subject: 'Email Verification',
+        text: `Thank you for registering! Please click on the following link to verify your email: http://your_domain/api/verify/${verificationToken}`,
+        // You can also include an HTML version of the email if you prefer.
+        html: `<p>Thank you for registering! Please click on the following link to verify your email:</p>
+              <p><a href="http://your_domain/api/verify/${verificationToken}">Verify Email</a></p>`,
+    };
+
+    // console.log(`Verification email sent to ${email}. Token: ${verificationToken}`);
+    // Send the email
+    transporter.sendMail(mailOptions, (error, info) => {
+        if (error) {
+            console.error('Error sending verification email:', error);
+        } else {
+            console.log('Verification email sent:', info.response);
+        }
+    });
+}
+
+async function verifyEmail(req, res) {
+    const verificationToken = req.params.verificationToken;
+
+    try {
+        //Find usr with matching verif token in "userinfo" tbl
+        const user = await readItem({ TableName: 'userinfo', Key: { username: verificationToken } });
+
+        if (!user) {
+            return res.stats(404).json({ error: 'Invalid verification token.' });
+        }
+
+        user.isEmailVerified = true;
+        user.verificationToken = null;
+
+        //save updated usr in "userinfo" tbl
+        await updateItem({ TableName: 'userinfo', Item: user });
+
+        res.json({ message: 'Email verified successfully!' });
+
+    } catch (error) {
+        console.error('Error during email verification:', error);
+        res.status(500).json({ error: 'Something went wrong during email verification' });
+    }
+}
+
 
 app.listen(port, () => {
     console.log(`Server started on port ${port}`);
