@@ -15,6 +15,7 @@ const dynamodb = new AWS.DynamoDB();
 
 //function to create new item in dynamodb
 function createItem(params) {
+    console.log('Params:', params);
     return new Promise((resolve, reject) => {
         console.log('Writing to DynamoDB:', params);
         dynamodb.putItem(params, (err, data) => {
