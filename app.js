@@ -30,6 +30,8 @@ app.post('/api/register', async (req, res) => {
     try {
         const hashedPassword = await argon2.hash(password);
 
+        console.log('Hashed password:', hashedPassword);//adding this for tests
+
         //gen verif token 
         const verificationToken = generateVerificationToken();
 
