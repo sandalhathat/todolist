@@ -1,69 +1,68 @@
-//dynamoDBUtils.js
+// dynamoDBUtils.js
 
 const AWS = require('aws-sdk');
 const { v4: uuidv4 } = require('uuid');
 require('dotenv').config(); //load .env
 
 AWS.config.update({
-    // region: 'us-west-2',
-    region: 'us-east-2',
-    accessKeyId: process.env.AWS_ACCESS_KEY_ID,
-    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+  region: 'us-east-2',
+  accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+  secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
 });
 
-const dynamodb = new AWS.DynamoDB();
+const docClient = new AWS.DynamoDB.DocumentClient(); // Create DocumentClient
 
-//function to create new item in dynamodb
+// Function to create a new item in DynamoDB
 function createItem(params) {
-    console.log('Params:', params);
-    return new Promise((resolve, reject) => {
-        console.log('Writing to DynamoDB:', params);
-        dynamodb.putItem(params, (err, data) => {
-            if (err) {
-                console.error('Error writing to DynamoDB:', err);
-                reject(err);
-            } else {
-                console.log('Data written to DynamoDB!:', data);
-                resolve(data);
-            }
-        });
+  console.log('Params:', params);
+  return new Promise((resolve, reject) => {
+    console.log('Writing to DynamoDB:', params);
+    docClient.put(params, (err, data) => { // Use DocumentClient's put() method
+      if (err) {
+        console.error('Error writing to DynamoDB:', err);
+        reject(err);
+      } else {
+        console.log('Data written to DynamoDB!', data);
+        resolve(data);
+      }
     });
+  });
 }
 
-// func to read item from db
+// Function to read an item from the database
 function readItem(params) {
-    return new Promise((resolve, reject) => {
-        dynamodb.getItem(params, (err, data) => {
-            if (err) reject(err);
-            else resolve(data.Item);
-        });
+  return new Promise((resolve, reject) => {
+    docClient.get(params, (err, data) => { // Use DocumentClient's get() method
+      if (err) reject(err);
+      else resolve(data.Item);
     });
+  });
 }
 
-// func to update item in db
+// Function to update an item in the database
 function updateItem(params) {
-    return new Promise((resolve, reject) => {
-        dynamodb.updateItem(params, (err, data) => {
-            if (err) reject(err);
-            else resolve(data.Attributes);
-        });
+  return new Promise((resolve, reject) => {
+    docClient.update(params, (err, data) => { // Use DocumentClient's update() method
+      if (err) reject(err);
+      else resolve(data.Attributes);
     });
+  });
 }
 
-//func to delete
+// Function to delete an item from the database
 function deleteItem(params) {
-    return new Promise((resolve, reject) => {
-        dynamodb.deleteItem(params, (err, data) => {
-            if (err) reject(err);
-            else resolve(data);
-        });
+  return new Promise((resolve, reject) => {
+    docClient.delete(params, (err, data) => { // Use DocumentClient's delete() method
+      if (err) reject(err);
+      else resolve(data);
     });
+  });
 }
 
 module.exports = {
-    createItem,
-    readItem,
-    updateItem,
-    deleteItem,
-    generateVerificationToken: () => uuidv4(),
+  createItem,
+  readItem,
+  updateItem,
+  deleteItem,
+  generateVerificationToken: () => uuidv4(),
 };

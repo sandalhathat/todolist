@@ -4,8 +4,7 @@ const express = require('express');
 const app = express();
 const port = process.env.PORT || 80;
 const argon2 = require('argon2');
-const { createItem, readItem, updateItem, generateVerificationToken } = require
-    ('./dynamoDBUtils');
+const { createItem, readItem, updateItem, generateVerificationToken } = require('./dynamoDBUtils');
 const { isValidEmail, sanitizeEmail, formatEmailKey } = require('./emailUtils');
 
 const fs = require('fs');
@@ -13,57 +12,60 @@ const fs = require('fs');
 const pidFilePath = '/var/pids/web.pid';
 fs.writeFileSync(pidFilePath, process.pid.toString(), 'utf-8');
 process.on('exit', () => {
-    fs.unlinkSync(pidFilePath);
+  fs.unlinkSync(pidFilePath);
 });
 
 app.use(express.json());
 
 // Endpoint for user registration
 app.post('/api/register', async (req, res) => {
-    const { username, email, password } = req.body;
+  const { username, email, password } = req.body;
 
-    console.log('Received registration request:', req.body);//log testing
+  console.log('Received registration request:', req.body); //log testing
 
-    if (!username || !email || !password) {
-        console.log('Missing required fields:', { username, email, password });
-        return res.status(400).json({ error: 'Please provide all required fields.' });
-    }
+  if (!username || !email || !password) {
+    console.log('Missing required fields:', { username, email, password });
+    return res.status(400).json({ error: 'Please provide all required fields.' });
+  }
 
-    try {
-        const hashedPassword = await argon2.hash(password);
+  try {
+    const hashedPassword = await argon2.hash(password);
 
-        console.log('Hashed password:', hashedPassword);//adding this for tests
+    console.log('Hashed password:', hashedPassword); //adding this for tests
 
-        //gen verif token 
-        const verificationToken = generateVerificationToken();
+    //gen verif token
+    const verificationToken = generateVerificationToken();
 
-        //create object w user data to store in dynamodb
-        const newUser = {
-            username,
-            email,
-            password: hashedPassword,
-            isEmailVerified: false,
-            verificationToken,
-        };
+    //create object w user data to store in dynamodb
+    const newUser = {
+      username,
+      email,
+      password: hashedPassword,
+      isEmailVerified: false,
+      verificationToken,
+    };
 
-        // Save the new user in the "userinfo" table
-        //before creating a new user in db
-        console.log('Creating new user:', newUser);
-        //creates new user
-        await createItem({ TableName: 'userinfo', Item: newUser });
-        //after creating new user
-        console.log('User created successfully!');
-        console.log(`Verification token for ${email}: ${verificationToken}`);
+    // Save the new user in the "userinfo" table
+    //before creating a new user in db
+    console.log('Creating new user:', newUser);
+    //creates new user
+    await createItem({ TableName: 'userinfo', Item: newUser });
+    //after creating new user
+    console.log('User created successfully!');
+    console.log(`Verification token for ${email}: ${verificationToken}`);
 
-        // Send the verification email here (Step 3)
-        // ... (code for sending the verification email)
+    // Send the verification email here (Step 3)
+    // ... (code for sending the verification email)
 
-        res.json({ message: 'User successfully registered!' });
-    } catch (error) {
-        console.error('Error during user registration:', error);
-        res.status(500).json({ error: 'Something failed during registration.' });
-    }
+    res.json({ message: 'User successfully registered!' });
+  } catch (error) {
+    console.error('Error during user registration:', error);
+    res.status(500).json({ error: 'Something failed during registration.' });
+  }
 });
+
+// Rest of the code remains the same...
+
 
 // Endpoint for email verification
 app.get('/api/verify/:verificationToken', async (req, res) => {
