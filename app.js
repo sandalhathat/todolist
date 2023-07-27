@@ -7,7 +7,9 @@ const argon2 = require('argon2');
 const { createItem, readItem, updateItem, generateVerificationToken } = require
     ('./dynamoDBUtils');
 const { isValidEmail, sanitizeEmail, formatEmailKey } = require('./emailUtils');
+
 const fs = require('fs');
+
 const pidFilePath = '/var/pids/web.pid';
 fs.writeFileSync(pidFilePath, process.pid.toString(), 'utf-8');
 process.on('exit', () => {
