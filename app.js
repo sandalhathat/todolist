@@ -197,12 +197,29 @@ async function verifyEmail(req, res) {
 
     try {
         //Find usr with matching verif token in "userinfo" tbl
-        const user = await readItem({ TableName: 'userinfo', Key: { username: verificationToken } });
+        // const user = await readItem({ TableName: 'userinfo', Key: { username: verificationToken } });
 
-        if (!user) {
-            return res.stats(404).json({ error: 'Invalid verification token.' });
+        const params = {
+            TableName: 'userinfo',
+            FilterExpression: 'verificationToken = :token',
+            ExpressionAttributeValues: {
+                ':token': verificationToken,
+            },
+        };
+
+        const result = await docClient.scan(params).promise();
+
+        if (result.Items.length === 0) {
+            return res.status(404).json({ error: 'Invalid verification token.'});
         }
 
+
+        // if (!user) {
+        //     return res.stats(404).json({ error: 'Invalid verification token.' });
+        // }
+
+        //assuming only one item with verif token, update said user
+        const user = result.Items[0];
         user.isEmailVerified = true;
         user.verificationToken = null;
 
@@ -210,7 +227,6 @@ async function verifyEmail(req, res) {
         await updateItem({ TableName: 'userinfo', Item: user });
 
         res.json({ message: 'Email verified successfully!' });
-
     } catch (error) {
         console.error('Error during email verification:', error);
         res.status(500).json({ error: 'Something went wrong during email verification' });
