@@ -63,4 +63,5 @@ module.exports = {
   updateItem,
   deleteItem,
   generateVerificationToken: () => uuidv4(),
+  docClient, //exporting doclient variable
 };
