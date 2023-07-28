@@ -1,11 +1,9 @@
 // app.js
-
 const express = require('express');
 const app = express();
 const port = process.env.PORT || 80;
 const argon2 = require('argon2');
 const { createItem, readItem, updateItem, generateVerificationToken } = require('./dynamoDBUtils');
-const { isValidEmail, sanitizeEmail, formatEmailKey } = require('./emailUtils');
 const { google } = require('googleapis');
 const fs = require('fs');
 
@@ -15,7 +13,10 @@ process.on('exit', () => {
     fs.unlinkSync(pidFilePath);
 });
 
+
+// Middleware
 app.use(express.json());
+
 
 // Endpoint for user registration
 app.post('/api/register', async (req, res) => {
@@ -55,7 +56,7 @@ app.post('/api/register', async (req, res) => {
         console.log(`Verification token for ${email}: ${verificationToken}`);
 
         // Send the verification email here (Step 3)
-        // ... (code for sending the verification email)
+        await sendVerificationEmail(email, verificationToken);
 
         res.json({ message: 'User successfully registered!' });
     } catch (error) {
@@ -63,6 +64,11 @@ app.post('/api/register', async (req, res) => {
         res.status(500).json({ error: 'Something failed during registration.' });
     }
 });
+
+
+// Endpoint for email verification
+app.get('/api/verify/:verificationToken', verifyEmail);
+
 
 // Endpoint for user login
 app.post('/api/login', async (req, res) => {
@@ -99,35 +105,6 @@ app.post('/api/login', async (req, res) => {
     }
 });
 
-// Endpoint for email verification
-app.get('/api/verify/:verificationToken', verifyEmail);
-// app.get('/api/verify/:verificationToken', async (req, res) => {
-//     const verificationToken = req.params.verificationToken;
-
-//     try {
-//         // Find the user with the matching verification token in the "userinfo" table
-//         const user = await readItem({ TableName: 'userinfo', Key: { username: verificationToken } });
-
-//         if (!user) {
-//             return res.status(404).json({ error: 'Invalid verification token.' });
-//         }
-
-//         if (user.isEmailVerified) {
-//             return res.status(200).json({ message: 'Email already verified.' });
-//         }
-
-//         user.isEmailVerified = true;
-//         user.verificationToken = null;
-
-//         // Save the updated user in the "userinfo" table
-//         await updateItem({ TableName: 'userinfo', Item: user });
-
-//         res.json({ message: 'Email verified successfully!' });
-//     } catch (error) {
-//         console.error('Error during email verification:', error);
-//         res.status(500).json({ error: 'Something went wrong during email verification' });
-//     }
-// });
 
 // Endpoint for password reset
 app.post('/api/reset-password', async (req, res) => {
@@ -158,42 +135,8 @@ app.post('/api/reset-password', async (req, res) => {
     }
 });
 
+
 async function sendVerificationEmail(email, verificationToken) {
-    //add code here to send verif email to user email
-    //can use libs like nodemailer to send...
-    //create nodemailer transporter using email srvc prov
-    // const transporter = nodemailer.createTransport({
-    //     host: 'your_smtp_host',
-    //     port: 587,
-    //     secure: false,
-    //     auth: {
-    //         user: 'your_email@example.com',
-    //         pass: 'your_email_password',
-    //     },
-    // });
-
-    // Email content
-    // const mailOptions = {
-    //     from: 'your_email@example.com', // Replace with your email address
-    //     // to: email,
-    //     to: 'sandalhathat@gmail.com',
-    //     subject: 'Email Verification',
-    //     text: `Thank you for registering! Please click on the following link to verify your email: http://your_domain/api/verify/${verificationToken}`,
-    //     // You can also include an HTML version of the email if you prefer.
-    //     html: `<p>Thank you for registering! Please click on the following link to verify your email:</p>
-    //           <p><a href="http://your_domain/api/verify/${verificationToken}">Verify Email</a></p>`,
-    // };
-
-    // console.log(`Verification email sent to ${email}. Token: ${verificationToken}`);
-    // Send the email
-    // transporter.sendMail(mailOptions, (error, info) => {
-    //     if (error) {
-    //         console.error('Error sending verification email:', error);
-    //     } else {
-    //         console.log('Verification email sent:', info.response);
-    //     }
-    // });
-
     try {
         //load credentials from client_secret.json
         const credentials = await getCredentialsFromSecret();
@@ -225,7 +168,7 @@ async function sendVerificationEmail(email, verificationToken) {
 
         //send the email using gmail api
         const message = await gmail.users.messages.send({
-            userId: 'me', 
+            userId: 'me',
             requestBody: {
                 raw: makeRawEmail(mailOptions),
             },
@@ -235,6 +178,7 @@ async function sendVerificationEmail(email, verificationToken) {
         console.error('Error sending verification email:', error);
     }
 }
+
 
 function makeRawEmail(mailOptions) {
     const email_lines = [];
@@ -275,6 +219,7 @@ async function getCredentialsFromSecret() {
     }
 }
 
+
 async function verifyEmail(req, res) {
     const verificationToken = req.params.verificationToken;
 
@@ -309,6 +254,7 @@ async function verifyEmail(req, res) {
         res.status(500).json({ error: 'Something went wrong during email verification' });
     }
 }
+
 
 app.listen(port, () => {
     console.log(`Server started on port ${port}`);
