@@ -99,9 +99,6 @@ app.post('/api/login', async (req, res) => {
     }
 });
 
-
-
-
 // Endpoint for email verification
 app.get('/api/verify/:verificationToken', async (req, res) => {
     const verificationToken = req.params.verificationToken;
@@ -112,6 +109,10 @@ app.get('/api/verify/:verificationToken', async (req, res) => {
 
         if (!user) {
             return res.status(404).json({ error: 'Invalid verification token.' });
+        }
+
+        if (user.isEmailVerified) {
+            return res.status(200).json({ message: 'Email already verified.' });
         }
 
         user.isEmailVerified = true;
