@@ -199,7 +199,7 @@ function makeRawEmail(mailOptions) {
 }
 
 
-const secretName = 'yoursecretname';
+const secretName = 'gmail-api-credentials';
 const region = 'us-east-2';
 const secretsManager = new AWS.SecretsManager({ region });
 
