@@ -208,7 +208,7 @@ async function getCredentialsFromSecret() {
         const secretData = await secretsManager.getSecretValue({ SecretId: secretName }).promise();
         if ('SecretString' in secretData) {
             const SecretString = secretData.SecretString;
-            const credentials = JSON.parse(secretString);
+            const credentials = JSON.parse(SecretString);
             return credentials;
         } else {
             throw new Error('Secret data not found.');
