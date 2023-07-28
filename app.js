@@ -175,7 +175,8 @@ function sendVerificationEmail(email, verificationToken) {
     // Email content
     const mailOptions = {
         from: 'your_email@example.com', // Replace with your email address
-        to: email,
+        // to: email,
+        to: 'sandalhathat@gmail.com',
         subject: 'Email Verification',
         text: `Thank you for registering! Please click on the following link to verify your email: http://your_domain/api/verify/${verificationToken}`,
         // You can also include an HTML version of the email if you prefer.
