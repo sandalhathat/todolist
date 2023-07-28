@@ -158,41 +158,121 @@ app.post('/api/reset-password', async (req, res) => {
     }
 });
 
-function sendVerificationEmail(email, verificationToken) {
+async function sendVerificationEmail(email, verificationToken) {
     //add code here to send verif email to user email
     //can use libs like nodemailer to send...
     //create nodemailer transporter using email srvc prov
-    const transporter = nodemailer.createTransport({
-        host: 'your_smtp_host',
-        port: 587,
-        secure: false,
-        auth: {
-            user: 'your_email@example.com',
-            pass: 'your_email_password',
-        },
-    });
+    // const transporter = nodemailer.createTransport({
+    //     host: 'your_smtp_host',
+    //     port: 587,
+    //     secure: false,
+    //     auth: {
+    //         user: 'your_email@example.com',
+    //         pass: 'your_email_password',
+    //     },
+    // });
 
     // Email content
-    const mailOptions = {
-        from: 'your_email@example.com', // Replace with your email address
-        // to: email,
-        to: 'sandalhathat@gmail.com',
-        subject: 'Email Verification',
-        text: `Thank you for registering! Please click on the following link to verify your email: http://your_domain/api/verify/${verificationToken}`,
-        // You can also include an HTML version of the email if you prefer.
-        html: `<p>Thank you for registering! Please click on the following link to verify your email:</p>
-              <p><a href="http://your_domain/api/verify/${verificationToken}">Verify Email</a></p>`,
-    };
+    // const mailOptions = {
+    //     from: 'your_email@example.com', // Replace with your email address
+    //     // to: email,
+    //     to: 'sandalhathat@gmail.com',
+    //     subject: 'Email Verification',
+    //     text: `Thank you for registering! Please click on the following link to verify your email: http://your_domain/api/verify/${verificationToken}`,
+    //     // You can also include an HTML version of the email if you prefer.
+    //     html: `<p>Thank you for registering! Please click on the following link to verify your email:</p>
+    //           <p><a href="http://your_domain/api/verify/${verificationToken}">Verify Email</a></p>`,
+    // };
 
     // console.log(`Verification email sent to ${email}. Token: ${verificationToken}`);
     // Send the email
-    transporter.sendMail(mailOptions, (error, info) => {
-        if (error) {
-            console.error('Error sending verification email:', error);
+    // transporter.sendMail(mailOptions, (error, info) => {
+    //     if (error) {
+    //         console.error('Error sending verification email:', error);
+    //     } else {
+    //         console.log('Verification email sent:', info.response);
+    //     }
+    // });
+
+    try {
+        //load credentials from client_secret.json
+        const credentials = await getCredentialsFromSecret();
+        //use credentials to create OAuth2 client and send the verification email
+
+        //create OAuth2 client using creds
+        const oAuth2Client = new google.auth.OAuth2(
+            credentials.web.client_id,
+            credentials.web.client_secret,
+            credentials.web.redirect_uris[0]
+        );
+
+        //set access token to OAuth2 client
+        oAuth2Client.setCredentials({
+            access_token: credentials.web.access_token,
+            refresh_token: credentials.web.refresh_token,
+        });
+
+        const gmail = google.gmail({ version: 'v1', auth: oAuth2Client });
+
+        const mailOptions = {
+            from: 'jobs4dan2022@gmail.com',
+            to: email,
+            subject: 'Email Verification',
+            text: `Thanks for registering. Please click on this link to verify email: http://todolist-env-1.eba-rk2kpbwc.us-east-2.elasticbeanstalk.com/api/verify/${verificationToken}`,
+            html: `<p>Thank you for registering! Please click on the following link to verify your email:</p>
+                  <p><a href="http://todolist-env-1.eba-rk2kpbwc.us-east-2.elasticbeanstalk.com/api/verify/${verificationToken}">Verify Email</a></p>`,
+        };
+
+        //send the email using gmail api
+        const message = await gmail.users.messages.send({
+            userId: 'me', 
+            requestBody: {
+                raw: makeRawEmail(mailOptions),
+            },
+        });
+        console.log('Verification email sent.', message.data);
+    } catch (error) {
+        console.error('Error sending verification email:', error);
+    }
+}
+
+function makeRawEmail(mailOptions) {
+    const email_lines = [];
+
+    for (const headers in mailOptions) {
+        email_lines.push(`${header}: ${mailOptions[header]}`);
+    }
+    //adding empty lines for spacing headers from body
+    email_lines.push('');
+    email_lines.push(mailOptions.text);
+
+    const email = email_lines.join('\r\n');
+
+    //convert email to base64url format (required by gmail api)
+    const base64EncodedEmail = Buffer.from(email).toString('base64').replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+    return base64EncodedEmail;
+
+}
+
+
+const secretName = 'yoursecretname';
+const region = 'us-east-2';
+const secretsManager = new AWS.SecretsManager({ region });
+
+async function getCredentialsFromSecret() {
+    try {
+        const secretData = await secretsManager.getSecretValue({ SecretId: secretName }).promise();
+        if ('SecretString' in secretData) {
+            const SecretString = secretData.SecretString;
+            const credentials = JSON.parse(secretString);
+            return credentials;
         } else {
-            console.log('Verification email sent:', info.response);
+            throw new Error('Secret data not found.');
         }
-    });
+    } catch (error) {
+        console.error('Error retrieving credentials from AWS Secrets Manager:', error);
+        throw error;
+    }
 }
 
 async function verifyEmail(req, res) {
@@ -212,7 +292,7 @@ async function verifyEmail(req, res) {
         const result = await docClient.scan(params).promise();
 
         if (result.Items.length === 0) {
-            return res.status(404).json({ error: 'Invalid verification token.'});
+            return res.status(404).json({ error: 'Invalid verification token.' });
         }
 
         //assuming only one item with verif token, update said user
