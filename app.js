@@ -6,7 +6,7 @@ const port = process.env.PORT || 80;
 const argon2 = require('argon2');
 const { createItem, readItem, updateItem, generateVerificationToken } = require('./dynamoDBUtils');
 const { isValidEmail, sanitizeEmail, formatEmailKey } = require('./emailUtils');
-
+const { google } = require('googleapis');
 const fs = require('fs');
 
 const pidFilePath = '/var/pids/web.pid';
