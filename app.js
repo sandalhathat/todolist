@@ -100,33 +100,34 @@ app.post('/api/login', async (req, res) => {
 });
 
 // Endpoint for email verification
-app.get('/api/verify/:verificationToken', async (req, res) => {
-    const verificationToken = req.params.verificationToken;
+app.get('/api/verify/:verificationToken', verifyEmail);
+// app.get('/api/verify/:verificationToken', async (req, res) => {
+//     const verificationToken = req.params.verificationToken;
 
-    try {
-        // Find the user with the matching verification token in the "userinfo" table
-        const user = await readItem({ TableName: 'userinfo', Key: { username: verificationToken } });
+//     try {
+//         // Find the user with the matching verification token in the "userinfo" table
+//         const user = await readItem({ TableName: 'userinfo', Key: { username: verificationToken } });
 
-        if (!user) {
-            return res.status(404).json({ error: 'Invalid verification token.' });
-        }
+//         if (!user) {
+//             return res.status(404).json({ error: 'Invalid verification token.' });
+//         }
 
-        if (user.isEmailVerified) {
-            return res.status(200).json({ message: 'Email already verified.' });
-        }
+//         if (user.isEmailVerified) {
+//             return res.status(200).json({ message: 'Email already verified.' });
+//         }
 
-        user.isEmailVerified = true;
-        user.verificationToken = null;
+//         user.isEmailVerified = true;
+//         user.verificationToken = null;
 
-        // Save the updated user in the "userinfo" table
-        await updateItem({ TableName: 'userinfo', Item: user });
+//         // Save the updated user in the "userinfo" table
+//         await updateItem({ TableName: 'userinfo', Item: user });
 
-        res.json({ message: 'Email verified successfully!' });
-    } catch (error) {
-        console.error('Error during email verification:', error);
-        res.status(500).json({ error: 'Something went wrong during email verification' });
-    }
-});
+//         res.json({ message: 'Email verified successfully!' });
+//     } catch (error) {
+//         console.error('Error during email verification:', error);
+//         res.status(500).json({ error: 'Something went wrong during email verification' });
+//     }
+// });
 
 // Endpoint for password reset
 app.post('/api/reset-password', async (req, res) => {
@@ -198,7 +199,6 @@ async function verifyEmail(req, res) {
 
     try {
         //Find usr with matching verif token in "userinfo" tbl
-        // const user = await readItem({ TableName: 'userinfo', Key: { username: verificationToken } });
 
         const params = {
             TableName: 'userinfo',
@@ -213,11 +213,6 @@ async function verifyEmail(req, res) {
         if (result.Items.length === 0) {
             return res.status(404).json({ error: 'Invalid verification token.'});
         }
-
-
-        // if (!user) {
-        //     return res.stats(404).json({ error: 'Invalid verification token.' });
-        // }
 
         //assuming only one item with verif token, update said user
         const user = result.Items[0];

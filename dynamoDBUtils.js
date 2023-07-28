@@ -14,9 +14,7 @@ const docClient = new AWS.DynamoDB.DocumentClient(); // Create DocumentClient
 
 // Function to create a new item in DynamoDB
 function createItem(params) {
-  console.log('Params:', params);
   return new Promise((resolve, reject) => {
-    console.log('Writing to DynamoDB:', params);
     docClient.put(params, (err, data) => { // Use DocumentClient's put() method
       if (err) {
         console.error('Error writing to DynamoDB:', err);
