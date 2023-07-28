@@ -16,3 +16,5 @@ todolist.ppk
 logs.txt
 
 docker-compose.yml
+
+client_secret_googleusercontent.json
