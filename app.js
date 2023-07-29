@@ -2,6 +2,7 @@
 
 const express = require('express');
 const app = express();
+const AWS = require('aws-sdk');
 const port = process.env.PORT || 80;
 const argon2 = require('argon2');
 const { createItem, readItem, updateItem, deleteItem, docClient, generateVerificationToken } = require('./dynamoDBUtils');
