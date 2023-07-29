@@ -4,7 +4,7 @@ const express = require('express');
 const app = express();
 const port = process.env.PORT || 80;
 const argon2 = require('argon2');
-const { createItem, readItem, updateItem, generateVerificationToken } = require('./dynamoDBUtils');
+const { createItem, readItem, updateItem, deleteItem, docClient, generateVerificationToken } = require('./dynamoDBUtils');
 const { google } = require('googleapis');
 const fs = require('fs');
 
