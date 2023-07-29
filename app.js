@@ -247,8 +247,21 @@ async function verifyEmail(req, res) {
         user.isEmailVerified = true;
         user.verificationToken = null;
 
+        console.log('User to be updated:', user);//added for debug
+
         //save updated usr in "userinfo" tbl
-        await updateItem({ TableName: 'userinfo', Item: user });
+        // await updateItem({ TableName: 'userinfo', Item: user });
+        const updateParams = {
+            TableName: 'userinfo',
+            Key: { username: user.username },
+            UpdateExpression: 'SET isEmailVerified = :val REMOVE verificationToken',
+            ExpressionAttributeValues: {
+                ':val': true,
+            },
+            ReturnValues: 'ALL_NEW',
+        };
+
+        await updateItem(updateParams);
 
         res.json({ message: 'Email verified successfully!' });
     } catch (error) {
