@@ -224,19 +224,21 @@ async function getCredentialsFromSecret() {
 
 async function verifyEmail(req, res) {
     const verificationToken = req.params.verificationToken;
-
     try {
         //Find usr with matching verif token in "userinfo" tbl
 
         const params = {
             TableName: 'userinfo',
-            FilterExpression: 'verificationToken = :token',
+            IndexName: 'verificationToken-index',//replace with index name if applicable..
+            // FilterExpression: 'verificationToken = :token',
+            KeyConditionExpression: 'verificationToken = :token',
             ExpressionAttributeValues: {
                 ':token': verificationToken,
             },
         };
 
-        const result = await docClient.scan(params).promise();
+        // const result = await docClient.scan(params).promise();
+        const result = await docClient.query(params).promise();
 
         if (result.Items.length === 0) {
             return res.status(404).json({ error: 'Invalid verification token.' });
